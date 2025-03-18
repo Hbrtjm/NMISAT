@@ -1,0 +1,231 @@
+\documentclass{article}
+\usepackage{graphicx}
+\usepackage{caption}
+\usepackage{booktabs}
+\usepackage{amssymb}
+\usepackage{amsmath}
+\usepackage[dvipsnames]{xcolor}
+\usepackage[T1]{fontenc}
+\usepackage[utf8]{inputenc}
+\usepackage{subcaption} 
+\usepackage{float}
+\usepackage{geometry}
+\geometry{margin=1in}
+\usepackage{babel}
+\usepackage{animate}
+\usepackage{hyphenat}
+
+\title{MOWNiT Laboratorium 1\\Precyzja zmiennoprzecinkowa}
+\author{Hubert Miklas}
+\date{11-03-2025}
+
+\begin{document}
+
+\maketitle
+
+\section{Wprowadzenie}
+
+Laboratorium polega na wprowadzeniu do precyzji obliczeń w operacjach zmiennoprzecinkowych w komputerze. Wszystkie zadania zostały wykonane w języku Python 3.10.12.
+
+\section{Zadanie 1}
+
+Szukamy precyzji komputerowej $\epsilon$, czyli najmniejszej liczby, dla której komputer uznaje $1 + \epsilon > 1$ za prawdziwe. 
+
+\subsection{Kod implementujący obliczenia}
+
+\texttt{\\
+epsilon = 1\\
+const = 1\\
+while const + epsilon > const:\\
+\quad epsilon /= 2\\
+epsilon *= 2\\
+print(epsilon)\\
+}
+
+To daje wynik $\epsilon \approx 2.2\times10^{-16}$, co jest oczekiwane dla liczb zmiennoprzecinkowych z podwójną precyzją (float64).
+
+
+\section{Zadanie 2}
+
+Rozważamy problem ewaluacji funkcji $\sin(x)$, przy czym występuje propagacja błędu danych wejściowych (zakłócenie $h$ w argumencie $x$). Zakładamy $h = 10^{-5}$.
+
+\subsection{Błąd bezwzględny} 
+\[
+\text{bb} = \left|\sin(x+h) - \sin(x)\right| \approx |\cos(x)|\, h.
+\]
+Maksymalny błąd bezwzględny wynosi zatem około $10^{-5}$ (dla $|\cos(x)|=1$).
+
+\subsection{Błąd względny}
+\[
+\text{bw} = \frac{|\sin(x+h) - \sin(x)|}{|\sin(x)|} \approx h\, |\cot(x)|.
+\]
+Błąd względny rośnie, gdy $\sin(x)$ jest bliskie zeru, czyli dla $x=k\pi$, $k\in\mathbb{Z}$.
+
+\subsection{Uwarunkowanie problemu} 
+\[
+\text{cond} \approx \left|\frac{x\cos(x)}{\sin(x)}\right| = |x\,\cot(x)|.
+\]
+Problem jest bardzo czuły dla argumentów $x$ bliskich wielokrotności $\pi$, gdzie $\sin(x) \approx 0$, natomiast lepiej uwarunkowany dla $x\approx \pi/2+k\pi$. W szczególności, dla $x\to 0$ mamy
+\[
+\lim_{x\to0}\frac{\sin(x)}{x} = 1,
+\]
+co zapewnia dobre uwarunkowanie w pobliżu zera.
+
+\subsection{Kod implementujący obliczenia}
+
+\begin{verbatim}
+import math from sin, cos
+
+def find_machine_epsilon():
+    eps = 1.0
+    while (1.0 + eps) > 1.0:
+        eps /= 2
+    return eps * 2
+
+def absolute_error(x, h):
+    return abs(sin(x + h) - sin(x))
+
+def relative_error(x, h):
+    if sin(x) == 0:
+        return float('inf')  # unbounded error
+    return abs(h * cos(x) / sin(x))
+
+def condition_number(x):
+    if sin(x) == 0:
+        return float('inf')
+    return abs(x * cos(x) / sin(x))
+
+h = 1e-5  # małe zakłócenie
+
+precision = 4
+
+for x in test_values:
+    abs_err = absolute_error(x, h)
+    rel_err = relative_error(x, h)
+    cond_num = condition_number(x)
+    print(f"x = {x}")
+    print(f"  Absolute error: {round(abs_err,precision)}")
+    print(f"  Relative error: {round(rel_err,precision)}")
+    print(f"  Condition number: {round(cond_num,precision)}")
+\end{verbatim}
+
+\subsection{Wyniki obliczeń}
+
+Poniżej przedstawiamy wartości błędów i liczby uwarunkowania dla wybranych wartości $x$:
+
+\begin{center}
+\begin{tabular}{|c|c|c|c|}
+    \hline
+    $x$ & Błąd bezwzględny & Błąd względny & Liczba uwarunkowania \\
+    \hline
+    0.1 & $9.95 \times 10^{-6}$ & $9.967 \times 10^{-5}$ & 0.9967 \\
+    0.5 & $8.78 \times 10^{-6}$ & $1.83 \times 10^{-5}$ & 0.9152 \\
+    1.0 & $5.40 \times 10^{-6}$ & $6.42 \times 10^{-6}$ & 0.6421 \\
+    \hline
+\end{tabular}
+\end{center}
+
+\section{Zadanie 3}
+
+Funkcję $\sin(x)$ można rozwijać w szereg Maclaurina (szczególny przypadek szeregu Taylora):
+\begin{equation}
+    \sin(x) = x - \frac{x^3}{3!} + \frac{x^5}{5!} - \frac{x^7}{7!} + \cdots
+\end{equation}
+
+\subsection{Przybliżenie pierwszym składnikiem ($\sin(x) \approx x$)}
+
+Przyjmujemy $\hat{y} = x$. Wyznaczamy błędy:
+\begin{equation}
+    \Delta y = \hat{y} - \sin(x), \quad \Delta x = \arcsin(\hat{y}) - x.
+\end{equation}
+
+\subsection{Kod implementujący obliczenia dla obu przypadków}
+
+\begin{verbatim}
+from math import sin, asin
+
+def progressive_error_approx1(x):
+    return abs(sin(x) - x)
+
+def progressive_error_approx2(x):
+    return abs(sin(x) - (x - x**3 / 6))
+
+def backward_error_approx1(x):
+    return abs(x - asin(x))
+
+def backward_error_approx2(x):
+    return abs(x - asin(x - x**3 / 6))
+
+def underflow_level(beta, L):
+    return beta**L
+
+test_values = [0.1, 0.5, 1.0]
+precision = 4
+
+print("Approximation 1")
+
+for value in test_values:
+    print(f"{value} & {round(backward_error_approx1(value),precision)} & {round(progressive_error_approx1(value),precision)} \")
+
+print("Approximation 2")
+
+for value in test_values:
+    print(f"{value} & {round(backward_error_approx2(value),precision)} & {round(progressive_error_approx2(value),precision)} \")
+
+\end{verbatim}
+
+\subsection{Przybliżenie jednym składnikiem ($\sin(x) \approx x$)}
+
+Dla wybranych wartości $x$ otrzymujemy:
+
+\begin{table}[H]
+    \centering
+    \begin{tabular}{c|cc}
+         $x$ & $\Delta y$ & $\Delta x$ \\
+         \hline
+         0.1 & $-1.6658\times10^{-4}$ & $1.6742\times10^{-4}$ \\
+         0.5 & $-2.0574\times10^{-2}$ & $2.3599\times10^{-2}$ \\
+         1.0 & $-1.5853\times10^{-1}$ & $5.70796\times10^{-1}$ \\
+    \end{tabular}
+    \caption{Błędy progresywny i wsteczny dla przybliżenia $\sin(x)\approx x$}
+    \label{tab:one_term}
+\end{table}
+
+\subsection{Przybliżenie dwoma składnikami ($\sin(x) \approx x - \frac{x^3}{6}$)}
+
+Przyjmujemy $\hat{y} = x - \frac{x^3}{6}$. Otrzymujemy:
+\begin{equation}
+    \Delta y = \hat{y} - \sin(x), \quad \Delta x = \arcsin(\hat{y}) - x.
+\end{equation}
+Dla wybranych wartości $x$ otrzymujemy:
+
+\begin{table}[H]
+    \centering
+    \begin{tabular}{c|cc}
+         $x$ & $\Delta y$ & $\Delta x$ \\
+         \hline
+         0.1 & $8.33\times10^{-8}$ & $-8.37\times10^{-8}$ \\
+         0.5 & $2.5887\times10^{-4}$ & $-2.9496\times10^{-4}$ \\
+         1.0 & $8.1377\times10^{-3}$ & $-1.4889\times10^{-2}$ \\
+    \end{tabular}
+    \caption{Błędy progresywny i wsteczny dla przybliżenia $\sin(x)\approx x - \frac{x^3}{6}$}
+    \label{tab:two_term}
+\end{table}
+
+\section{Zadanie 4}
+
+Zakładamy, że mamy znormalizowany system zmiennoprzecinkowy o parametrach: $\beta=10$, $p=3$, $L=-98$.
+
+\textbf{Poziom niedomiaru (ang. Underflow level - UFL):} 
+Najmniejsza dodatnia liczba znormalizowana ma postać
+\[
+\text{UFL} = 1.00 \times 10^{-98}.
+\]
+
+\textbf{Operacja:} Dla $x = 6.87\times10^{-97}$ oraz $y = 6.81\times10^{-97}$:
+\[
+x - y = (6.87-6.81)\times10^{-97} = 0.06\times10^{-97} = 6.0\times10^{-99}.
+\]
+Ponieważ $6.0\times10^{-99} < \text{UFL}$, wynik operacji ulega underflow i jest reprezentowany jako $0$.
+
+\end{document}
