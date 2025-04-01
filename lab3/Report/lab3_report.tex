@@ -1,0 +1,687 @@
+\documentclass{article}
+\usepackage{graphicx}
+\usepackage{caption}
+\usepackage{booktabs}
+\usepackage{amssymb}
+\usepackage{amsmath}
+\usepackage[dvipsnames]{xcolor}
+\usepackage[T1]{fontenc}
+\usepackage[utf8]{inputenc}
+\usepackage{subcaption} 
+\usepackage{float}
+\usepackage{geometry}
+\geometry{margin=1in}
+\usepackage{graphicx}
+\usepackage{babel}
+\usepackage{animate}
+\usepackage{hyphenat}
+\usepackage{url} 
+
+\title{Sprawozdanie z laboratorium 3}
+\author{Hubert Miklas}
+\date{25 Marca 2025}
+
+\begin{document}
+
+\maketitle
+
+\section{Wstęp}
+Tematem laboratorium 3. jest analiza metod interpolacji wielomianowej, 
+wyrażanie wielomianów metodą Hornera oraz oszacowanie liczby mnożeń 
+potrzebnych do ewaluacji wielomianu w różnych reprezentacjach.
+
+\section{Zadanie 1: Obliczenie wielomianu interpolacyjnego}
+
+Mamy dane węzły:
+\[
+(x_0,y_0)=(-1,2.4), \quad (x_1,y_1)=(1,1.8), \quad (x_2,y_2)=(2,4.5).
+\]
+Szukamy wielomianu stopnia 2 w postaci:
+\[
+p(t)=a_2 t^2+a_1 t+a_0.
+\]
+
+\subsection{Metoda jednomianów}
+Podstawiając poszczególne węzły, otrzymujemy układ równań:
+\begin{align}
+a_2(-1)^2 + a_1(-1) + a_0 &= 2.4, \label{eq:mon1}\\
+a_2(1)^2 + a_1(1) + a_0 &= 1.8, \label{eq:mon2}\\
+a_2(2)^2 + a_1(2) + a_0 &= 4.5. \label{eq:mon3}
+\end{align}
+Co upraszcza się do:
+\begin{align*}
+a_2 - a_1 + a_0 &= 2.4, \\
+a_2 + a_1 + a_0 &= 1.8, \\
+4a_2 + 2a_1 + a_0 &= 4.5.
+\end{align*}
+
+Odejmując równanie (\ref{eq:mon1}) od (\ref{eq:mon2}):
+\[
+(a_2 + a_1 + a_0) - (a_2 - a_1 + a_0)= 1.8-2.4 \quad \Longrightarrow \quad 2a_1=-0.6,
+\]
+stąd:
+\[
+a_1=-0.3.
+\]
+
+Podstawiamy $a_1$ do równania (\ref{eq:mon2}):
+\[
+a_2 -0.3 + a_0 = 1.8 \quad \Longrightarrow \quad a_2 + a_0 = 2.1. \tag{4}
+\]
+Natomiast z równania (\ref{eq:mon3}):
+\[
+4a_2 + 2(-0.3) + a_0 = 4.5 \quad \Longrightarrow \quad 4a_2 -0.6 + a_0 = 4.5,
+\]
+czyli:
+\[
+4a_2 + a_0 = 5.1. \tag{5}
+\]
+Odejmując równanie (4) od (5):
+\[
+(4a_2 + a_0) - (a_2 + a_0)= 5.1-2.1 \quad \Longrightarrow \quad 3a_2=3,
+\]
+więc:
+\[
+a_2=1.
+\]
+Wstawiając $a_2=1$ do (A):
+\[
+1 + a_0 = 2.1 \quad \Longrightarrow \quad a_0=1.1.
+\]
+
+Stąd wielomian interpolacyjny ma postać:
+\begin{equation} \tag{6}
+p(t)=t^2-0.3t+1.1.
+\end{equation}
+
+\subsection{Metoda wielomianów Lagrange’a}
+Wielomian interpolacyjny w postaci Lagrange’a zapisujemy jako:
+\[
+p(t)=\sum_{k=0}^{2}y_k L_k(t),
+\]
+gdzie wielomiany bazowe mają postać:
+\[
+L_k(t)=\prod_{\substack{i=0 \\ i\neq k}}^{2}\frac{t-x_i}{x_k-x_i}.
+\]
+
+Obliczamy kolejne $L_k(t)$:
+\begin{itemize}
+    \item Dla $k=0$, czyli $x_0=-1$:
+    \[
+    L_0(t)=\frac{(t-x_1)(t-x_2)}{(x_0-x_1)(x_0-x_2)}=\frac{(t-1)(t-2)}{(-1-1)(-1-2)}=\frac{(t-1)(t-2)}{(-2)(-3)}=\frac{(t-1)(t-2)}{6}.
+    \]
+    \item Dla $k=1$, czyli $x_1=1$:
+    \[
+    L_1(t)=\frac{(t-x_0)(t-x_2)}{(x_1-x_0)(x_1-x_2)}=\frac{(t+1)(t-2)}{(1+1)(1-2)}=\frac{(t+1)(t-2)}{(2)(-1)}=-\frac{(t+1)(t-2)}{2}.
+    \]
+    \item Dla $k=2$, czyli $x_2=2$:
+    \[
+    L_2(t)=\frac{(t-x_0)(t-x_1)}{(x_2-x_0)(x_2-x_1)}=\frac{(t+1)(t-1)}{(2+1)(2-1)}=\frac{(t+1)(t-1)}{3}.
+    \]
+\end{itemize}
+
+Podstawiając wartości $y_0=2.4$, $y_1=1.8$, $y_2=4.5$, mamy:
+\[
+p(t)=2.4\cdot\frac{(t-1)(t-2)}{6} -1.8\cdot\frac{(t+1)(t-2)}{2} + 4.5\cdot\frac{(t+1)(t-1)}{3}.
+\]
+
+Uprośćmy poszczególne wyrażenia:
+\[
+\frac{2.4}{6}=0.4,\quad \frac{1.8}{2}=0.9,\quad \frac{4.5}{3}=1.5.
+\]
+Wówczas:
+\[
+p(t)=0.4\,(t-1)(t-2) - 0.9\,(t+1)(t-2) + 1.5\,(t+1)(t-1).
+\]
+
+Rozwiniemy nawiasy:
+\begin{align*}
+(t-1)(t-2)&=t^2-3t+2,\\[1mm]
+(t+1)(t-2)&=t^2-t-2,\\[1mm]
+(t+1)(t-1)&=t^2-1.
+\end{align*}
+
+Podstawiając:
+\begin{align*}
+p(t) &= 0.4\,(t^2-3t+2) - 0.9\,(t^2-t-2) + 1.5\,(t^2-1)\\[1mm]
+&= \bigl(0.4t^2-1.2t+0.8\bigr) + \bigl(-0.9t^2+0.9t+1.8\bigr) + \bigl(1.5t^2-1.5\bigr)\\[1mm]
+&= (0.4-0.9+1.5)t^2 + (-1.2+0.9)t + (0.8+1.8-1.5)\\[1mm]
+&= t^2 - 0.3t + 1.1.
+\end{align*}
+
+Stąd:
+\begin{equation}    
+p(t)=t^2-0.3t+1.1 \tag{7}
+\end{equation}
+co jest zgodne z wynikiem uzyskanym metodą jednomianów.\\[2mm]
+
+\subsection{Metoda Newtona}
+W postaci Newtona wielomian interpolacyjny zapisujemy jako:
+\[
+p(t)=a_0+a_1(t-x_0)+a_2(t-x_0)(t-x_1),
+\]
+gdzie współczynniki wyznaczamy w następujący sposób:
+\begin{itemize}
+    \item $a_0=f(x_0)=2.4$,
+    \item $a_1=\dfrac{f(x_1)-f(x_0)}{x_1-x_0}=\dfrac{1.8-2.4}{1-(-1)}=\dfrac{-0.6}{2}=-0.3$,
+    \item $a_2=\dfrac{\displaystyle \frac{f(x_2)-f(x_1)}{x_2-x_1}-a_1}{x_2-x_0}=\dfrac{\displaystyle \frac{4.5-1.8}{2-1} - (-0.3)}{2-(-1)}=\dfrac{2.7+0.3}{3}=\dfrac{3.0}{3}=1.$
+\end{itemize}
+
+Podstawiając, otrzymujemy:
+\[
+p(t)=2.4 - 0.3\,(t+1) + (t+1)(t-1).
+\]
+Ponieważ:
+\[
+(t+1)(t-1)=t^2-1,
+\]
+to:
+\[
+p(t)=2.4-0.3t-0.3 + t^2-1=t^2-0.3t+(2.4-0.3-1)=t^2-0.3t+1.1.
+\]
+Czyli:
+\begin{equation}
+p(t)=t^2-0.3t+1.1. \tag{8}
+\end{equation}
+\subsection{Podsumowanie}
+Wszystkie trzy metody – jednomianowa, Lagrange’a oraz Newtona – dają ten sam wielomian interpolacyjny:
+\[
+p(t)=t^2-0.3t+1.1.
+\]
+Jest to zgodne z teorią interpolacji, która gwarantuje jednoznaczność wielomianu interpolacyjnego dla danej liczby węzłów \cite{wiki:Interpolacja_wielomianowa}.
+
+\subsection{Kod realizujący wszystkie obliczenia i wyniki}
+
+\begin{verbatim}
+    import numpy as np
+
+def mononomial(values):
+    n = len(values)
+    A = np.array([ [values[j][0] ** i for i in range(n)] for j in range(n) ])
+    b = np.array(list(zip(*values))[1])
+    coefficients = np.linalg.solve(A,b)
+    return np.poly1d(coefficients)
+
+def Lagrange_polynomial(values):
+    x_values, y_values = zip(*values)
+    n = len(values)
+    def L(i, x):
+        nonlocal x_values
+        numer = np.prod([(x - x_values[j]) for j in range(len(x_values)) if j != i])
+        denom = np.prod([(x_values[i] - x_values[j]) for j in range(len(x_values)) if j != i])
+        return numer / denom
+    
+    def P(x):
+        return sum(y_values[i] * L(i, x) for i in range(len(x_values)))
+    
+    return P
+
+
+def Newton_approximation(values):
+    x_values, y_values = zip(*values)
+    
+    def divided_differences(x_values, y_values):
+        n = len(x_values)
+        coef = list(y_values)
+        for j in range(1, n):
+            for i in range(n - 1, j - 1, -1):
+                coef[i] = (coef[i] - coef[i - 1]) / (x_values[i] - x_values[i - j])
+        return coef
+    
+    coeffs = divided_differences(x_values, y_values)
+    
+    def P(x):
+        n = len(coeffs)
+        result = coeffs[-1]
+        for i in range(n - 2, -1, -1):
+            result = result * (x - x_values[i]) + coeffs[i]
+        return result
+    
+    return P
+
+def test_interpolation(values):
+    poly_mono = mononomial(values)
+    poly_lagrange = Lagrange_polynomial(values)
+    poly_newton = Newton_approximation(values)
+    test_xs = [-1, 1, 2, 0, 3]
+    for x in test_xs:
+        print(f"x={x}: Monomial={poly_mono(x)}, Lagrange={poly_lagrange(x)}, Newton={poly_newton(x)}")
+
+def main():
+    interpolation_points = [(-1,2.4), (1,1.8),(2,4.5)]
+    test_interpolation(interpolation_points)
+
+if __name__ == "__main__":
+    main()
+\end{verbatim}
+
+Dla wybranych wartości $x$, gdzie $x \in {-3,-2,-1, 0, 1, 2, 3} $ prezentują się następująco:
+
+\begin{table}[h]
+    \centering
+    \begin{tabular}{|c|c|c|c|}
+         \hline
+         Wartość x & Jednomian & Lagrange & Netwon \\
+         \hline
+         -3 & 11.8 & 11.0 & 11.0 \\
+-2 & 6.0 & 5.699999999999999 & 5.699999999999999 \\
+-1 & 2.4 & 2.4 & 2.4 \\
+0 & 0.9999999999999999 & 1.1 & 1.1 \\
+1 & 1.8000000000000003 & 1.8 & 1.8 \\
+2 & 4.800000000000001 & 4.5 & 4.5 \\
+3 & 10.000000000000002 & 9.2 & 9.200000000000001 \\
+    \hline
+    \end{tabular}
+    \caption{Porównanie wartości wynikowych dla wybranych x po interpolacji zadaną metodą}
+    \label{tab:results}
+\end{table}
+
+\section{Zadanie 2: Wyrażenie wielomianu metodą Hornera}
+Mamy dany wielomian:
+\begin{equation}
+    p(t)=3t^3-7t^2+5t-4.
+\end{equation}
+Celem jest przekształcenie tego wielomianu do postaci Hornera, która pozwala na efektywną ewaluację i redukcję błędów numerycznych (por. \cite{Higham2002,Goldberg1991}).
+
+
+\subsection{Przekształcenie do postaci Hornera}
+Schemat Hornera polega na zagnieżdżonym wyciąganiu wspólnego czynnika \(t\):
+\[
+p(t)=((a_3t+a_2)t+a_1)t+a_0.
+\]
+Podstawiając nasze współczynniki, otrzymujemy:
+\[
+p(t)=((3t-7)t+5)t-4.
+\]
+
+\subsection{Weryfikacja poprawności}
+Rozwińmy postać Hornera, aby upewnić się, że jest równoważna oryginalnemu wielomianowi:
+\begin{align*}
+((3t-7)t+5)t-4 &= \bigl((3t^2-7t)+5\bigr)t-4\\[1mm]
+&= (3t^3-7t^2+5t)-4\\[1mm]
+&= 3t^3-7t^2+5t-4.
+\end{align*}
+Otrzymany wynik jest identyczny z postacią pierwotną, co potwierdza poprawność przekształcenia.
+
+\subsection{Korzyści płynące z metody Hornera}
+Postać Hornera pozwala na:
+\begin{itemize}
+    \item Redukcję liczby mnożeń – dla wielomianu stopnia 3 potrzebujemy tylko 3 mnożeń i 3 dodawań, zamiast 6 mnożeń i 3 dodawań.
+    \item Zmniejszenie błędów zaokrągleń, co jest szczególnie istotne przy ewaluacji wielomianów w arytmetyce zmiennoprzecinkowej (patrz \cite{Higham2002,Goldberg1991,Rycerz}).
+\end{itemize}
+
+\section{Zadanie 3: Analiza złożoności obliczeniowej ewaluacji wielomianu}
+
+Rozważmy wielomian \( p(t) \) stopnia \( n-1 \) zapisany w trzech reprezentacjach.
+
+\subsection{Reprezentacja jednomianowa}
+W standardowej postaci:
+\[
+p(t)=a_0+a_1t+a_2t^2+\cdots+a_{n-1}t^{n-1}.
+\]
+Ewaluację wielomianu można przeprowadzić efektywnie przy użyciu schematu Hornera, który przekształca postać wielomianu do:
+\[
+p(t)=a_0+t\Bigl(a_1+t\Bigl(a_2+\cdots+t\,a_{n-1}\Bigr)\Bigr).
+\]
+Schemat Hornera wymaga dokładnie \( n-1 \) mnożeń oraz \( n-1 \) dodawań. Zatem liczba mnożeń wynosi $n-1$ mnożeń. Oznacza to  złożoność czasową względem ilości operacji \( \mathcal{O}(n) \); por. \cite{Higham2002}.
+
+\subsection{Reprezentacja Lagrange’a}
+W postaci Lagrange’a wielomian interpolacyjny zapisujemy jako:
+\[
+p(t)=\sum_{k=0}^{n-1}y_k\,L_k(t),
+\]
+gdzie wielomian bazowy \( L_k(t) \) ma postać:
+\[
+L_k(t)=\prod_{\substack{i=0 \\ i\neq k}}^{n-1}\frac{t-x_i}{x_k-x_i}.
+\]
+Dla każdego \( k \) należy wykonać iloczyn \( n-1 + n-1 \) mnożenia (obliczenie mianownika i licznika, nie licząc w tym dzielenia) – co daje \( 2 n- 2 \) mnożeń na każdy z \( n \) węzłów, czyli łącznie:
+\[
+2n(n-1)
+\]
+mnożeń. Dodatkowo, po obliczeniu iloczynów należy pomnożyć każdy \( L_k(t) \) przez \( y_k \) (co daje \( n \) mnożeń) oraz zsumować wszystkie składniki. Łącznie otrzymujemy:
+\[
+2n(n-1) + n = 2n^2 - n.
+\]
+jest to rzędu $\mathcal{O}(n^2)$ mnożeń.
+
+\subsection{Reprezentacja Newtona}
+W postaci Newtona wielomian interpolacyjny zapisujemy jako:
+\[
+p(t)=a_0+a_1(t-x_0)+a_2(t-x_0)(t-x_1)+\cdots+a_{n-1}(t-x_0)(t-x_1)\cdots(t-x_{n-2}).
+\]
+Wyznaczenie tego wielomianu można przeprowadzić również przy użyciu schematu Hornera (adaptowanego do postaci Newtona), co wymaga:
+\begin{itemize}
+    \item Obliczenia iloczynów w sposób sekwencyjny – przy czym dla wyrazu \( (t-x_0)(t-x_1)\cdots(t-x_{k-1}) \) potrzeba \( k \) mnożeń,
+    \item Łączna liczba mnożeń wynosi: \( 0+1+2+\cdots+(n-1)=\frac{n(n-1)}{2} \).
+\end{itemize}
+Jednak przy zastosowaniu rekurencyjnej formy schematu Hornera dla Newtona (patrz np. \cite{Rycerz}), można obliczyć wartość wielomianu wykonując tylko \( n-1 \) mnożeń. Dlatego przyjmujemy $n-1$ mnożeń.
+
+\subsection{Podsumowanie}
+\begin{itemize}
+    \item Reprezentacja jednomianowa (przy użyciu schematu Hornera): około \( n-1 \) mnożeń.
+    \item Reprezentacja Lagrange’a: około \( n^2 \) mnożeń.
+    \item Reprezentacja Newtona (przy użyciu schematu Hornera): około \( n-1 \) mnożeń.
+\end{itemize}
+
+Porównanie efektywności ewaluacji wielomianu wskazuje, że metody oparte na schemacie Hornera (jednomiany oraz Newtona) są znacznie bardziej optymalne niż bezpośrednia ewaluacja postaci Lagrange’a. Wynik ten znajduje potwierdzenie w literaturze dotyczącej stabilności i efektywności algorytmów numerycznych \cite{Higham2002,Goldberg1991}.
+
+
+\section{Zadanie domowe 1 -- Interpolacja funkcji Rungego}
+Rozważamy funkcję Rungego:
+\begin{equation}
+    f(t)=\frac{1}{1+25t^2}.
+\end{equation}
+Interpolacja tej funkcji przy użyciu równoodległych węzłów na przedziale $[-1,1]$ prowadzi do wystąpienia tzw. \emph{efektu Rungego} – czyli znacznych oscylacji, szczególnie w pobliżu krańców przedziału. Problem ten wynika z właściwości wielomianu interpolacyjnego, który dla dużych stopni może mieć bardzo zmienny przebieg przy równoodległych węzłach (por. \cite{Higham2002}).
+
+\subsection{Węzły równomierne vs. węzły Czebyszewa}
+Przy wyborze węzłów równomiernych w przedziale $[-1,1]$, węzły te mają postać:
+\[
+t_k = -1 + \frac{2k}{n}, \quad k=0,1,\dots,n.
+\]
+W praktyce, interpolacja funkcji Rungego dla stosunkowo dużej liczby węzłów (np. \( n \ge 10 \)) powoduje wyraźne oscylacje wielomianu interpolacyjnego przy krańcach przedziału.
+
+Lepszym rozwiązaniem jest użycie węzłów Czebyszewa, które są rozmieszczone gęściej przy końcach przedziału, co minimalizuje maksymalny błąd interpolacji. Węzły Czebyszewa dla przedziału \([-1,1]\) definiuje się jako:
+\begin{equation}
+    t_k = \cos\left(\frac{2k+1}{2n+2}\pi\right), \quad k=0,1,\dots,n.
+\end{equation}
+Dzięki takiemu rozmieszczeniu błędy interpolacyjne są rozłożone bardziej równomiernie, a oscylacje znacznie się zmniejszają (por. \cite{wiki:Interpolacja_wielomianowa}, \cite{Higham2002}).
+
+\newpage
+\section{Zadanie domowe 2 -- Własności wielomianów Legendre’a}
+
+W tym zadaniu rozważamy trzy zagadnienia związane z wielomianami Legendre’a.
+
+\subsection{Ortogonalność}
+Wielomiany Legendre’a \( P_n(t) \) są ortogonalne względem miary jednostkowej na przedziale \([-1,1]\), co formalnie zapisujemy jako:
+\begin{equation}
+    \int_{-1}^{1} P_i(t) P_j(t) \, dt = 0, \quad \text{dla } i \neq j.
+\end{equation}
+Dowód tej ortogonalności opiera się na własnościach układu wielomianów ortogonalnych i można go znaleźć w literaturze \cite{wiki:Legendre_polynomials}.
+\subsection{Rekurencyjna zależność}
+Wielomiany Legendre’a spełniają również rekurencyjny wzór, który pozwala na wyznaczanie kolejnych wielomianów:
+\begin{equation}
+    (n+1) P_{n+1}(t) = (2n+1)t\,P_n(t) - n\,P_{n-1}(t).
+\end{equation}
+Wzór ten umożliwia generowanie wielomianów \( P_n(t) \) dla \( n\geq 1 \) przy znajomości \( P_0(t) \) i \( P_1(t) \). Standardowe postaci pierwszych kilku wielomianów to:
+\[
+P_0(t)=1,\quad P_1(t)=t,\quad P_2(t)=\frac{1}{2}(3t^2-1),\quad P_3(t)=\frac{1}{2}(5t^3-3t),\ \ldots
+\]
+
+\subsection{Rozkład jednomianów}
+Każdy jednomian \( t^k \) (dla \( k=0,1,\dots,6 \)) można wyrazić jako liniową kombinację wielomianów Legendre’a \( \{P_0(t), P_1(t), \dots, P_6(t)\} \). Przykładowo, dla niższych potęg mamy:
+\begin{align*}
+1 &= P_0(t),\\[1mm]
+t &= P_1(t),\\[1mm]
+t^2 &= \frac{2}{3}P_2(t) + \frac{1}{3}P_0(t),\\[1mm]
+t^3 &= \frac{2}{5}P_3(t) + \frac{3}{5}P_1(t).
+\end{align*}
+Ogólny proces wyznaczania współczynników opiera się na wykorzystaniu ortogonalności wielomianów Legendre’a – poprzez rzutowanie jednomianu na przestrzeń wielomianów ortogonalnych:
+\[
+c_k = \frac{\int_{-1}^{1} t^m\,P_k(t)\, dt}{\int_{-1}^{1} \left[P_k(t)\right]^2 dt}.
+\]
+Dla wyższych potęg (np. \( m=4,5,6 \)) współczynniki można wyznaczyć analogicznie, co daje rozkłady typu:
+\begin{align*}
+t^4 &= \frac{8}{35}P_4(t) + \frac{4}{7}P_2(t) + \frac{3}{35}P_0(t),\\[1mm]
+t^5 &= \frac{8}{63}P_5(t) + \frac{5}{9}P_3(t) + \frac{5}{21}P_1(t),\\[1mm]
+t^6 &= \frac{16}{231}P_6(t) + \frac{10}{33}P_4(t) + \frac{5}{11}P_2(t) + \frac{1}{33}P_0(t).
+\end{align*}
+\newpage
+\section{Zadanie domowe 3 -- Interpolacja sklejanymi funkcjami sześciennymi}
+
+Rozważamy interpolację funkcji przy użyciu sklejanych funkcji sześciennych na trzech punktach \( x_0, x_1, x_2 \) o równych odstępach (tj. \( x_1=x_0+h \) oraz \( x_2=x_0+2h \)). Sklejanymi funkcjami sześciennymi (ang. cubic splines) na dwóch przedziałach \([x_0,x_1]\) i \([x_1,x_2]\) są dwie funkcje:
+\[
+S_0(x)=a_0+b_0(x-x_0)+c_0(x-x_0)^2+d_0(x-x_0)^3,\quad x\in[x_0,x_1],
+\]
+\[
+S_1(x)=a_1+b_1(x-x_1)+c_1(x-x_1)^2+d_1(x-x_1)^3,\quad x\in[x_1,x_2].
+\]
+
+\subsection{Warunki interpolacji i ciągłości}
+Aby uzyskać gładką funkcję składaną, musimy spełnić następujące warunki:
+\begin{enumerate}
+    \item \textbf{Interpolacja wartości:}
+    \begin{align*}
+        S_0(x_0) &= f(x_0),\\[1mm]
+        S_0(x_1) &= f(x_1),\\[1mm]
+        S_1(x_1) &= f(x_1),\\[1mm]
+        S_1(x_2) &= f(x_2).
+    \end{align*}
+    \item \textbf{Ciągłość pierwszej pochodnej w punkcie \( x_1 \):}
+    \[
+    S_0'(x_1)=S_1'(x_1).
+    \]
+    \item \textbf{Ciągłość drugiej pochodnej w punkcie \( x_1 \):}
+    \[
+    S_0''(x_1)=S_1''(x_1).
+    \]
+\end{enumerate}
+
+\subsection{Dodatkowe warunki brzegowe}
+Aby układ równań był jednoznacznie określony, stosuje się dodatkowo warunki brzegowe. Jednym z popularnych wyborów jest tzw. \emph{natural spline}:
+\[
+S_0''(x_0)=0 \quad \text{oraz} \quad S_1''(x_2)=0.
+\]
+W naszym przypadku, mając 3 punkty, mamy 2 segmenty (każdy opisany przez 4 współczynniki, czyli łącznie 8 niewiadomych). Warunki interpolacji (4 równania), ciągłości pierwszej i drugiej pochodnej w punkcie \( x_1 \) (2 równania) oraz dwa warunki brzegowe (2 równania) dają łącznie 8 równań, które pozwalają na wyznaczenie wszystkich współczynników \( a_i, b_i, c_i, d_i \) (dla \( i=0,1 \)).
+
+\subsection{Opis metody rozwiązania}
+Rozważamy funkcję określoną w trzech punktach:
+\[
+x_0,\quad x_1=x_0+h,\quad x_2=x_0+2h,
+\]
+oraz wartości:
+\[
+f(x_0)=y_0,\quad f(x_1)=y_1,\quad f(x_2)=y_2.
+\]
+Celem jest wyznaczenie funkcji sklejanej \(S(x)\) złożonej z dwóch sześciennych segmentów \(S_0(x)\) dla \(x\in[x_0,x_1]\) oraz \(S_1(x)\) dla \(x\in[x_1,x_2]\), przy zachowaniu warunków interpolacyjnych, ciągłości pierwszej i drugiej pochodnej w punkcie \(x_1\) oraz warunków brzegowych typu natural spline:
+\[
+S_0''(x_0)=0,\quad S_1''(x_2)=0.
+\]
+
+\subsection{Definicja funkcji sklejanych}
+Przyjmujemy następujące postaci segmentów:
+\[
+S_0(x)=a_0+b_0(x-x_0)+c_0(x-x_0)^2+d_0(x-x_0)^3,\quad x\in[x_0,x_1],
+\]
+\[
+S_1(x)=a_1+b_1(x-x_1)+c_1(x-x_1)^2+d_1(x-x_1)^3,\quad x\in[x_1,x_2].
+\]
+
+\subsection{Warunki interpolacyjne}
+\begin{enumerate}
+    \item \(S_0(x_0)=y_0\) $\Longrightarrow$ \(a_0=y_0.\)
+    \item \(S_0(x_1)=y_1\) $\Longrightarrow$
+    \[
+    a_0+b_0h+c_0h^2+d_0h^3=y_1.
+    \]
+    \item \(S_1(x_1)=y_1\) $\Longrightarrow$ \(a_1=y_1.\)
+    \item \(S_1(x_2)=y_2\) $\Longrightarrow$
+    \[
+    a_1+b_1h+c_1h^2+d_1h^3=y_2.
+    \]
+\end{enumerate}
+
+\subsection{Warunki ciągłości}
+\begin{enumerate}
+    \item \textbf{Ciągłość pierwszej pochodnej w \(x_1\):}
+    \[
+    S_0'(x)=b_0+2c_0(x-x_0)+3d_0(x-x_0)^2,
+    \]
+    więc
+    \[
+    S_0'(x_1)=b_0+2c_0h+3d_0h^2.
+    \]
+    Dla \(S_1(x)\):
+    \[
+    S_1'(x)=b_1+2c_1(x-x_1)+3d_1(x-x_1)^2,
+    \]
+    a zatem
+    \[
+    S_1'(x_1)=b_1.
+    \]
+    Warunek ciągłości pierwszej pochodnej:
+    \[
+    b_0+2c_0h+3d_0h^2=b_1.
+    \]
+    
+    \item \textbf{Ciągłość drugiej pochodnej w \(x_1\):}
+    \[
+    S_0''(x)=2c_0+6d_0(x-x_0) \quad \Longrightarrow \quad S_0''(x_1)=2c_0+6d_0h.
+    \]
+    \[
+    S_1''(x)=2c_1+6d_1(x-x_1) \quad \Longrightarrow \quad S_1''(x_1)=2c_1.
+    \]
+    Warunek ciągłości drugiej pochodnej:
+    \[
+    2c_0+6d_0h=2c_1 \quad \Longrightarrow \quad c_1=c_0+3d_0h.
+    \]
+\end{enumerate}
+
+\subsubsection*{Warunki brzegowe (natural spline)}
+\begin{enumerate}
+    \item \(S_0''(x_0)=0\) $\Longrightarrow$ \(2c_0=0\) $\Longrightarrow$ \(c_0=0.\)
+    \item \(S_1''(x_2)=0\). Skoro \(x_2=x_1+h\), mamy:
+    \[
+    S_1''(x_2)=2c_1+6d_1h=0 \quad \Longrightarrow \quad c_1=-3d_1h.
+    \]
+\end{enumerate}
+
+\subsection{Wyznaczenie współczynników}
+Zapiszemy teraz kolejne równania i wyznaczymy współczynniki.
+
+\subsection*{Segment \(S_0(x)\) na \([x_0,x_1]\)}
+\begin{enumerate}
+    \item \(a_0=y_0.\)
+    \item \(S_0(x_1)=y_1\) daje:
+    \[
+    y_0+b_0h+0\cdot h^2+d_0h^3=y_1 \quad \Longrightarrow \quad b_0h+d_0h^3=y_1-y_0.
+    \]
+    Stąd:
+    \[
+    b_0=\frac{y_1-y_0}{h}-d_0h^2.
+    \]
+\end{enumerate}
+
+\subsection*{Segment \(S_1(x)\) na \([x_1,x_2]\)}
+\begin{enumerate}
+    \item \(a_1=y_1.\)
+    \item \(S_1(x_2)=y_2\) daje:
+    \[
+    y_1+b_1h+c_1h^2+d_1h^3=y_2 \quad \Longrightarrow \quad b_1h+c_1h^2+d_1h^3=y_2-y_1.
+    \]
+\end{enumerate}
+
+\subsection*{Ciągłość pochodnej w \(x_1\)}
+\[
+b_0+2c_0h+3d_0h^2=b_1.
+\]
+Ponieważ \(c_0=0\), mamy:
+\[
+b_0+3d_0h^2=b_1.
+\]
+Podstawiając \(b_0\):
+\[
+\frac{y_1-y_0}{h}-d_0h^2+3d_0h^2=\frac{y_1-y_0}{h}+2d_0h^2=b_1.
+\]
+
+\subsection*{Ciągłość drugiej pochodnej w \(x_1\)}
+\[
+c_1=c_0+3d_0h \quad \Longrightarrow \quad c_1=3d_0h,
+\]
+oraz z warunku brzegowego dla \(S_1''(x_2)\):
+\[
+2c_1+6d_1h=0 \quad \Longrightarrow \quad c_1=-3d_1h.
+\]
+Zatem:
+\[
+3d_0h=-3d_1h \quad \Longrightarrow \quad d_0=-d_1.
+\]
+
+\subsection{Wyznaczenie \(d_0\)}
+Podstawiamy teraz do równania \(S_1(x_2)=y_2\). Korzystamy z faktu, że:
+\[
+b_1=\frac{y_1-y_0}{h}+2d_0h^2,
+\]
+a \(c_1=3d_0h\). Wówczas równanie \(S_1(x_2)=y_2\) przyjmuje postać:
+\[
+y_1+\left(\frac{y_1-y_0}{h}+2d_0h^2\right)h+3d_0h\cdot h^2+d_1h^3=y_2.
+\]
+Ponieważ \(d_1=-d_0\), mamy:
+\[
+y_1+\frac{y_1-y_0}{h}\cdot h+2d_0h^3+3d_0h^3-d_0h^3=y_2.
+\]
+Upraszczając:
+\[
+y_1+(y_1-y_0)+4d_0h^3=y_2.
+\]
+Stąd:
+\[
+4d_0h^3=y_2-2y_1+y_0 \quad \Longrightarrow \quad d_0=\frac{y_2-2y_1+y_0}{4h^3}.
+\]
+A zatem:
+\[
+d_1=-\frac{y_2-2y_1+y_0}{4h^3}.
+\]
+
+\subsection{Wyznaczenie \(b_0\) i \(b_1\)}
+Mamy:
+\[
+b_0=\frac{y_1-y_0}{h}-d_0h^2=\frac{y_1-y_0}{h}-\frac{y_2-2y_1+y_0}{4h^3}\cdot h^2
+=\frac{y_1-y_0}{h}-\frac{y_2-2y_1+y_0}{4h}.
+\]
+Natomiast:
+\[
+b_1=b_0+3d_0h^2=\frac{y_1-y_0}{h}-\frac{y_2-2y_1+y_0}{4h}+3\frac{y_2-2y_1+y_0}{4h}
+=\frac{y_1-y_0}{h}+\frac{2(y_2-2y_1+y_0)}{4h}.
+\]
+Uproszczając:
+\[
+b_1=\frac{y_1-y_0}{h}+\frac{y_2-2y_1+y_0}{2h}.
+\]
+
+\subsection{Wyznaczenie \(c_1\)}
+Z ciągłości drugiej pochodnej:
+\[
+c_1=3d_0h=\frac{3h\,(y_2-2y_1+y_0)}{4h^3}=\frac{3(y_2-2y_1+y_0)}{4h^2}.
+\]
+
+\subsection{Ostateczne współczynniki funkcji sklejanych}
+\subsubsection*{Dla przedziału \([x_0,x_1]\) (funkcja \(S_0(x)\))}
+\[
+\begin{aligned}
+a_0 &= y_0,\\[1mm]
+b_0 &= \frac{y_1-y_0}{h}-\frac{y_2-2y_1+y_0}{4h},\\[1mm]
+c_0 &= 0,\\[1mm]
+d_0 &= \frac{y_2-2y_1+y_0}{4h^3}.
+\end{aligned}
+\]
+
+\subsubsection*{Dla przedziału \([x_1,x_2]\) (funkcja \(S_1(x)\))}
+\[
+\begin{aligned}
+a_1 &= y_1,\\[1mm]
+b_1 &= \frac{y_1-y_0}{h}+\frac{y_2-2y_1+y_0}{2h},\\[1mm]
+c_1 &= \frac{3(y_2-2y_1+y_0)}{4h^2},\\[1mm]
+d_1 &= -\frac{y_2-2y_1+y_0}{4h^3}.
+\end{aligned}
+\]
+
+\subsection{Podsumowanie}
+Ostatecznie funkcja sklejana \(S(x)\) jest dana wzorami:
+\[
+S(x)=
+\begin{cases}
+S_0(x)=y_0+\left[\frac{y_1-y_0}{h}-\frac{y_2-2y_1+y_0}{4h}\right](x-x_0)
++\frac{y_2-2y_1+y_0}{4h^3}(x-x_0)^3, & x\in[x_0,x_1],\\[2mm]
+S_1(x)=y_1+\left[\frac{y_1-y_0}{h}+\frac{y_2-2y_1+y_0}{2h}\right](x-x_1)
++\frac{3(y_2-2y_1+y_0)}{4h^2}(x-x_1)^2
+-\frac{y_2-2y_1+y_0}{4h^3}(x-x_1)^3, & x\in[x_1,x_2].
+\end{cases}
+\]
+Spełnia ona warunki interpolacji, ciągłości pierwszej i drugiej pochodnej w punkcie \(x_1\) oraz warunki naturalne na brzegach, co gwarantuje gładkość przejścia między segmentami.
+
+
+
+\bibliographystyle{plain}
+\bibliography{references}
+
+\end{document}
