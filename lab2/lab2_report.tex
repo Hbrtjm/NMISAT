@@ -1,0 +1,256 @@
+\documentclass{article}
+\usepackage{graphicx} % Required for inserting images
+
+\title{MOWNIT laboratorium 2}
+\author{Hubert Miklas}
+\date{Marzec 2025}
+
+\begin{document}
+
+\maketitle
+
+
+
+\section{Wstęp}
+
+Laboratorium jest ciągiem dalszym laboratorium 1 które skupia się na arytmetyce komputerowej.
+
+\section{Zadanie 1.}
+
+Celem zadania jest zaimplementowanie algorytmu obliczającego funkcję wykładniczą $e^x$ za pomocą nieskończonego szeregu Maclaurina. Szereg ten ma postać:
+\[
+e^x = 1 + x + \frac{x^2}{2!} + \frac{x^3}{3!} + \cdots
+\]
+W tym zadaniu rozważono kilka aspektów implementacji algorytmu, w tym kryterium zakończenia obliczeń, porównanie wyników z funkcją $exp(x)$ oraz pytanie o dokładność dla wartości $x < 0$.
+
+
+\subsection{Kryterium zakończenia obliczeń}
+
+Aby zakończyć obliczenia, przyjęto, że obliczenia zostaną przerwane, gdy wartość kolejnego składnika szeregu osiągnie wartość mniejszą niż zadana dokładność $\epsilon$. W kodzie implementującym obliczenia, wartość ta została ustawiona na $1 \times 10^{-15}$.
+
+\newpage
+
+\subsection{Kod implementujący obliczenia}
+
+\begin{verbatim}
+from math import exp
+
+def facts(n):
+    if n == 0:
+        return [1]
+    results = [1]
+    fact = 1
+    for i in range(1, n):
+        fact *= i
+        results.append(fact)
+    return results
+
+def maclaurin_exp(x, epsilon=1e-15):
+    fact_size = 10
+    acc = 1
+    fact = facts(fact_size)
+    i = 0
+    result = 0
+    if x == 0:
+        return 1
+    while abs(acc / fact[i]) > epsilon:
+        if i + 1 == fact_size:
+            fact_size *= 2
+            fact = facts(fact_size)
+        result += acc / fact[i]
+        acc *= x
+        i += 1
+    return result
+
+def maclaurin_exp_negative(x, epsilon=1e-15):
+    return 1 / maclaurin_exp(-x, epsilon)
+
+def horner_maclaurin_exp(x, n=100, epsilon=1e-15):
+    fact = facts(n)
+    result = 1 / fact[n - 1]  # Initialize last term
+    for i in range(n - 2, -1, -1):
+        result = 1 / fact[i] + x * result
+    return result
+
+\end{verbatim}
+
+\subsection{Wyniki obliczeń}
+
+Poniżej przedstawiono wyniki obliczeń dla różnych wartości $x$. Dla każdej wartości $x$ obliczono wartość funkcji wykładniczej zarówno za pomocą zaimplementowanego algorytmu Maclaurina, jak i funkcji wbudowanej w bibliotekę Python \texttt{exp()}. Porównano również wyniki obliczeń za pomocą algorytmu Hornera.
+
+\begin{center}
+\begin{tabular}{|c|c|c|c|}
+    \hline
+    $x$ & Moje obliczenia $e^x$ & Biblioteka Python $\exp(x)$ & Błąd \\
+    \hline
+    -10 & $4.540\times10^{-5}$ & $4.540\times10^{-5}$ & $6.776\times10^{-21}$ \\
+    -5  & $0.00674$ & $0.00674$ & $1.735\times10^{-18}$ \\
+    -1  & $0.368$ & $0.368$ & $-5.551\times10^{-17}$ \\
+    1   & $2.718$ & $2.718$ & $4.441\times10^{-16}$ \\
+    5   & $148.413$ & $148.413$ & $-2.842\times10^{-14}$ \\
+    10  & $22026.466$ & $22026.466$ & $-7.276\times10^{-12}$ \\
+    \hline
+\end{tabular}
+\end{center}
+
+
+\subsection{Dokładność dla wartości $x < 0$}
+
+Przeprowadzono obliczenia dla $x < 0$ przy pomocy standardowego algorytmu oraz zmodyfikowanej wersji algorytmu, w której obliczenia są wykonywane za pomocą $e^{-x}$, a następnie wynik jest odwrotnością obliczonej wartości. Widać, że uzyskane wyniki są zgodne z wartościami obliczonymi przy użyciu funkcji $\exp(x)$ z biblioteki Python. Błędy dla wartości $x < 0$ są również minimalne i mieszczą się w granicach dokładności $\epsilon$.
+
+\subsection{Podsumowanie i wnioski na temat lepszego obliczania szeregu}
+
+Zaproponowany algorytm do obliczania funkcji wykładniczej \(e^x\) opiera się na klasycznym szeregu Taylora:
+\[
+e^x = \sum_{n=0}^{\infty} \frac{x^n}{n!}.
+\]
+Dla wartości \(x<0\) bezpośrednie sumowanie szeregu może prowadzić do problemów numerycznych związanych z sumowaniem wyrazów o zmiennych znakach, co zwiększa ryzyko utraty precyzji (tzw. \emph{catastrophic cancellation}). Aby uzyskać dokładniejsze wyniki, zamiast bezpośrednio sumować wyrazy szeregu, wykorzystuje się tożsamość:
+\[
+e^x = \frac{1}{e^{-x}},
+\]
+co pozwala na obliczenie szeregu dla \(e^{-x}\) (przy \(x>0\)), w którym wszystkie składniki są dodatnie. Następnie, poprzez wyliczenie odwrotności, uzyskuje się wartość \(e^x\). Takie przegrupowanie składników zmniejsza błędy zaokrągleń i zwiększa stabilność numeryczną obliczeń \cite{Higham2002,Goldberg1991}.
+
+\section{Zadanie 2}
+
+Celem zadania jest porównanie dokładności dwóch matematycznie równoważnych wyrażeń:
+\[
+x^2 - y^2 \quad \text{oraz} \quad (x - y)(x + y)
+\]
+w kontekście obliczeń arytmetyki zmiennoprzecinkowej. Oba wyrażenia są matematycznie ekwiwalentne, jednak przy obliczeniach komputerowych mogą wystąpić różnice wynikające z procesów zaokrągleń. 
+
+\subsection{Porównanie wyrażeń}
+
+Obliczenia przeprowadzone dla różnych wartości zmiennych \(x\) i \(y\) pokazują, że bezpośrednie obliczenie \(x^2 - y^2\) może prowadzić do utraty precyzji, szczególnie gdy \(x\) i \(y\) są bardzo zbliżone, ponieważ następuje odejmowanie dwóch dużych liczb. Natomiast wyrażenie \((x-y)(x+y)\) najpierw wykonuje odejmowanie, a dopiero potem mnożenie, co redukuje wpływ błędów zaokrągleń i czyni to wyrażenie numerycznie bardziej stabilnym \cite{Goldberg1991}.
+
+
+\subsection{Kod implementujący obliczenia}
+
+\begin{verbatim}
+def expression_1(x,y):
+    return x**2 - y**2
+
+def expression_2(x,y):
+    return (x+y) * (x-y)
+
+test_values = [
+    (1e-14, 1e-14),
+    (1e-14, -1e-14),
+    (-1e-14, 1e-14),
+    (-1e-14, -1e-14),
+    (1.1e-14, 1e-14),
+    (1e-14, 1.1e-14),
+]
+
+for x,y in test_values:
+    expression_1_value = expression_1(x,y)
+    expression_2_value = expression_2(x,y)
+    print(f"Value from the x^2 - y^2 {expression_1_value}")
+    print(f"Value from the (x + y)(x - y) {expression_2_value}")
+    print(f"Difference between expr_1 and expr_2: {expression_1_value - expression_2_value}")
+\end{verbatim}
+
+
+\subsection{Wyniki obliczeń}
+
+Poniższa tabela przedstawia wyniki obliczeń dla przykładowych wartości zmiennych \(x\) i \(y\):
+
+\begin{center}
+\begin{tabular}{|c|c|c|}
+    \hline
+    \(x\) i \(y\) & Wyrażenie \(x^2 - y^2\) & Wyrażenie \((x+y)(x-y)\) \\
+    \hline
+    \((1\cdot10^{-14},\, 1\cdot10^{-14})\) & 0.0 & 0.0   \\
+    \((1\cdot10^{-14},\, -1\cdot10^{-14})\) & 0.0 & 0.0  \\
+    \((-1\cdot10^{-14},\, 1\cdot10^{-14})\) & 0.0 & -0.0  \\
+    \((-1\cdot10^{-14},\, -1\cdot10^{-14})\) & 0.0 & -0.0 \\
+    \((1.1\cdot10^{-14},\, 1\cdot10^{-14})\) & \(2.1000000000000007 \times 10^{-29}\) & \(2.100000000000001 \times 10^{-29}\)  \\
+    \((1\cdot10^{-14},\, 1.1\cdot10^{-14})\) & \(-2.1000000000000007 \times 10^{-29}\) & \(-2.100000000000001 \times 10^{-29}\) \\
+    \hline
+\end{tabular}
+\end{center}
+
+\subsection{Analiza wyników}
+
+Z wyników obliczeń wynika, że przy bardzo małych wartościach zmiennych (rzędu \(10^{-14}\)) oba wyrażenia dają identyczne wyniki równe zeru w kontekście arytmetyki zmiennoprzecinkowej. Różnice w wynikach mogą pojawiać się przy bardziej zróżnicowanych wartościach zmiennych. W takich przypadkach, wyrażenie \((x-y)(x+y)\) okazuje się być bardziej stabilne numerycznie, gdyż minimalizuje efekty błędów zaokrągleń wynikających z odejmowania dużych, niemal równych wartości w wyrażeniu \(x^2-y^2\) \cite{Rycerz}.
+
+\subsection{Podsumowanie}
+
+W arytmetyce zmiennoprzecinkowej wyrażenie \((x-y)(x+y)\) jest zwykle obliczane z większą dokładnością niż \(x^2-y^2\), szczególnie gdy wartości \(x\) i \(y\) są bardzo zbliżone. Jest to związane z mniejszym ryzykiem utraty precyzji przy odejmowaniu.
+
+\section{Zadanie 3}
+
+Celem zadania jest analiza dokładności obliczeń wyróżnika równania kwadratowego w zmiennoprzecinkowej arytmetyce przy użyciu znormalizowanego systemu zmiennoprzecinkowego. Rozważamy równanie kwadratowe w postaci:
+\[
+ax^2 + bx + c = 0,
+\]
+gdzie \(a = 1.22\), \(b = 3.34\) oraz \(c = 2.28\). Obliczenia wykonujemy w systemie zmiennoprzecinkowym o podstawie \(\beta = 10\) i dokładności \(p = 3\) (czyli z trzema cyframi znaczącymi).
+
+\subsection{Podstawowe obliczenia}
+
+Wyróżnik równania kwadratowego wyraża się wzorem:
+\[
+\Delta = b^2 - 4ac.
+\]
+Zadanie składa się z następujących kroków:
+\begin{enumerate}
+    \item \textbf{(a)} Obliczenie wartości wyróżnika \(\Delta\) w znormalizowanym systemie zmiennoprzecinkowym (z uwzględnieniem ograniczonej precyzji),
+    \item \textbf{(b)} Wyznaczenie dokładnej wartości wyróżnika w rzeczywistej arytmetyce,
+    \item \textbf{(c)} Oszacowanie względnego błędu obliczonej wartości wyróżnika.
+\end{enumerate}
+
+Ze względu na ograniczoną precyzję (trzy cyfry znaczące), operacje arytmetyczne wykonywane na liczbach mogą skutkować znaczącą utratą precyzji, szczególnie gdy składniki \(b^2\) i \(4ac\) są do siebie bardzo zbliżone. W takim przypadku nawet niewielkie błędy zaokrągleń mogą wpłynąć na końcowy wynik, co jest szczególnie istotne przy rozwiązywaniu równań kwadratowych.
+
+\subsection{Kod implementujący obliczenia}
+
+\begin{verbatim}
+    class Quadratic:
+    def __init__(self,a,b,c):
+        self.a = a
+        self.b = b
+        self.c = c
+
+    def evaluate_simple(self,x):
+        return x**2 * self.a + self.b * x + self.c
+    
+    def evaluate_horner(self,x):
+        return self.c + x * ( self.b + x * self.a ) 
+    
+    def delta(self):
+        return self.b ** 2 - 4*self.a*self.c
+    
+
+def main():
+    a = 1.22
+    b = 3.34
+    c = 2.28
+    q = Quadratic(a,b,c)
+    delta = q.delta()
+    print(f"The value of delta is {delta}")
+    real_delta = 0.0292
+    print(f"The real value of delta is {real_delta}")
+    print(f"Relatice difference  between the real_delta and delta {abs(real_delta-delta)/real_delta}")
+
+if __name__ == "__main__":
+    main()
+\end{verbatim}
+
+\newpage
+
+\subsection{Analiza wyników}
+
+Analiza wyników obliczeń pozwala zauważyć, że:
+\begin{itemize}
+    \item Obliczona wartość wyróżnika w systemie zmiennoprzecinkowym z ograniczoną precyzją może znacznie odbiegać od dokładnej wartości obliczonej w arytmetyce rzeczywistej.
+    \item W przypadku, gdy \(b^2\) oraz \(4ac\) są do siebie bardzo zbliżone, względny błąd obliczeń wyróżnika staje się bardzo duży.
+\end{itemize}
+
+\subsection{Podsumowanie}
+
+Przeprowadzona analiza pokazuje, że w systemach o ograniczonej precyzji obliczeniowej należy szczególnie uważać przy operacjach, w których następuje odejmowanie dwóch niemal równych liczb. Zarówno przy obliczaniu szeregu wykładniczego dla \(x<0\), jak i przy wyliczaniu wyróżnika równania kwadratowego, zastosowanie metod minimalizujących utratę precyzji (np. przegrupowanie składników lub odpowiednia reformulacja wyrażeń) może znacząco poprawić wyniki obliczeń \cite{Higham2002,Goldberg1991}.
+
+\bibliographystyle{plain}
+\bibliography{references}
+
+
+\end{document}
+
