@@ -2,27 +2,7 @@ from numpy import cos, sin, exp
 import matplotlib.pyplot as plt
 import numpy as np
 
-def approx(f=lambda x: x, epsilon=1e-16):
-    a = -10  # Starting interval lower bound
-    b = 10   # Starting interval upper bound
-
-    if f(a) * f(b) > 0:
-        raise ValueError("Function must have opposite signs at interval endpoints")
-
-    x = (a + b) / 2
-    iterations = 0
-
-    while abs(f(x)) > epsilon and iterations < 1000:
-        if f(a) * f(x) < 0:
-            b = x
-        else:
-            a = x
-        x = (a + b) / 2
-        iterations += 1
-
-    return x, iterations
-
-def newton_approx(f=lambda x: x, f_der=lambda x: 1, x0=1.0, epsilon=1e-16, max_iter=100):
+def newton_approx(f=lambda x: x, f_der=lambda _: 1, x0=1.0, epsilon=1e-16, max_iter=100):
     x = x0
     iterations = 0
 
@@ -124,16 +104,13 @@ def main():
     results_c = compare_methods(f3, f3_der, x0_values, epsilon_values, "e^(-x) = x^2 - 1")
 
     print("\n=== FINAL SOLUTIONS ===") 
-    # solution_a, iters_a = newton_approx(f1, f1_der, 1.0)
     solutions_a = get_different_roots(results_a)
     print(f"Solution for x*cos(x) = 1: x ≈ {solutions_a} (found in iterations)")
 
     solutions_b = get_different_roots(results_b)
-    # solution_b, iters_b = newton_approx(f2, f2_der, 2.0)
     print(f"Solution for x^3 - 5x - 6 = 0: x ≈ {solutions_b} (found in iterations)")
 
     solutions_c  = get_different_roots(results_c)
-    # solution_c, iters_c = newton_approx(f3, f3_der, 1.0)
     print(f"Solution for e^(-x) = x^2 - 1: x ≈ {solutions_c} (found in iterations)")
 
 if __name__ == "__main__":
