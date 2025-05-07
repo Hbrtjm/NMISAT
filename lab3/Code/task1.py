@@ -5,7 +5,12 @@ def mononomial(values):
     A = np.array([ [values[j][0] ** i for i in range(n)] for j in range(n) ])
     b = np.array(list(zip(*values))[1])
     coefficients = np.linalg.solve(A,b)
+    for i, coeff in enumerate(coefficients):
+        x = f"x ^ {i}" if i > 0 else ''
+        print(f"{round(coeff,3)} * {x} + ", end='')
+    print()
     return np.poly1d(coefficients)
+
 
 def Lagrange_polynomial(values):
     x_values, y_values = zip(*values)
@@ -53,7 +58,9 @@ def test_interpolation(values):
         print(f"{x} & {poly_mono(x)} & {poly_lagrange(x)} & {poly_newton(x)} \\\\")
 
 def main():
-    interpolation_points = [(-1,2.4), (1,1.8),(2,4.5)]
+    interpolation_points = [(0.0, 0.0), (0.5, 1.6), (1.0, 2.0), (6.0, 2.0), (7.0, 1.5), (9.0, 0.0)]
+    for point in interpolation_points:
+        print(point)
     test_interpolation(interpolation_points)
 
 if __name__ == "__main__":
