@@ -1,0 +1,3 @@
+[submodule "Project/Quantum_Arithmetic_Project"]
+	path = Project/Quantum_Arithmetic_Project
+	url = git@github.com:Hbrtjm/Quantum_Arithmetic_Project.git
