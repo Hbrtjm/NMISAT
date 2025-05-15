@@ -1,117 +1,139 @@
-from numpy import cos, sin, exp
-import matplotlib.pyplot as plt
 import numpy as np
+import time
+import matplotlib.pyplot as plt
+from random import randrange
+import scipy.linalg
 
-def newton_approx(f=lambda x: x, f_der=lambda _: 1, x0=1.0, epsilon=1e-16, max_iter=100):
-    x = x0
-    iterations = 0
+def gen_A(n, a=0, b=10):
+    return [[randrange(a, b) for _ in range(n)] for _ in range(n)]
 
-    while abs(f(x)) > epsilon and iterations < max_iter:
-        if abs(f_der(x)) < 1e-10:
-            raise ValueError("Derivative too close to zero - divergent")
-        x = x - f(x)/f_der(x)
-        iterations += 1
+def gen_b(n, a=0, b=10):
+    return [randrange(a, b) for _ in range(n)]
 
-    return x, iterations
+def solve_inverse_np(A, b):
+    A_np = np.array(A)
+    b_np = np.array(b)
+    
+    start = time.time()
+    A_inv = np.linalg.inv(A_np)
+    x = A_inv @ b_np
+    end = time.time()
+    
+    I1 = A_np @ A_inv
+    I2 = A_inv @ A_np
+    
+    identity = np.eye(len(A))
+    is_I1 = np.allclose(I1, identity)
+    is_I2 = np.allclose(I2, identity)
+    
+    print(f"A*A^(-1) = I: {is_I1}")
+    print(f"A^(-1)*A = I: {is_I2}")
+    
+    return x, end - start
 
-def f1(x):
-    return x * cos(x) - 1
+def solve_LU(A, b):
+    A_np = np.array(A)
+    b_np = np.array(b)
+    
+    start = time.time()
+    P, L, U = scipy.linalg.lu(A_np)
+    
+    y = scipy.linalg.solve_triangular(L, P @ b_np, lower=True)
+    
+    x = scipy.linalg.solve_triangular(U, y, lower=False)
+    end = time.time()
+    
+    return x, end - start
 
-def f1_der(x):
-    return cos(x) - x * sin(x)
+def solve_QR(A, b):
+    A_np = np.array(A)
+    b_np = np.array(b)
+    
+    start = time.time()
+    Q, R = np.linalg.qr(A_np)
+    
+    x = np.linalg.solve(R, Q.T @ b_np)
+    end = time.time()
+    
+    return x, end - start
 
-def f2(x):
-    return x**3 - 5*x - 6
+def verify_solution(A, b, x):
+    A_np = np.array(A)
+    b_np = np.array(b)
+    x_np = np.array(x)
+    
+    result = A_np @ x_np
+    is_correct = np.allclose(result, b_np)
+    
+    return is_correct
 
-def f2_der(x):
-    return 3 * x**2 - 5
+def plot_times(sizes, trials = 100):
+    times_lu = []
+    times_inv = []
+    times_qr = []
+    
+    for n in sizes:
+        sum_time_lu = 0
+        sum_time_inv = 0
+        sum_time_qr = 0
+        for k in range(trials):
+            print(f"Calculating for size n={n}")
+            A = gen_A(n)
+            b = gen_b(n)
+            
+            _, time_lu = solve_LU(A, b)
+            sum_time_lu += time_lu
+            
+            _, time_inv = solve_inverse_np(A, b)
+            sum_time_inv += time_inv
+            
+            _, time_qr = solve_QR(A, b)
+            sum_time_qr += time_qr
 
-def f3(x):
-    return exp(-x) - x**2 + 1
-
-def f3_der(x):
-    return -exp(-x) - 2*x
-
-def plot_function(f, x_range, title):
-    x = np.linspace(x_range[0], x_range[1], 1000)
-    y = [f(xi) for xi in x]
-
+        times_lu.append(sum_time_lu/trials)
+        times_inv.append(sum_time_inv/trials)
+        times_qr.append(sum_time_qr/trials)
+    
     plt.figure(figsize=(10, 6))
-    plt.plot(x, y)
-    plt.axhline(y=0, color='r', linestyle='-')
+    plt.plot(sizes, times_lu, 'o-', label='LU')
+    plt.plot(sizes, times_inv, 's-', label='Odwracanie macierzy')
+    plt.plot(sizes, times_qr, '^-', label='QR')
+    plt.xlabel('Wielkość macierzy(n)')
+    plt.ylabel('Czas wykonania(s)')
+    plt.title('Porównanie rozwiązywania układu równań różnymi metodami')
+    plt.legend()
     plt.grid(True)
-    plt.title(title)
-    plt.xlabel('x')
-    plt.ylabel('f(x)')
     plt.show()
 
-def compare_methods(f, f_der, x0_values, epsilon_values, title):
-    results = []
-
-    for x0 in x0_values:
-        for eps in epsilon_values:
-            try:
-                root, iterations = newton_approx(f, f_der, x0, eps)
-                results.append({
-                    'x0': x0,
-                    'epsilon': eps,
-                    'root': root,
-                    'iterations': iterations,
-                    'final_error': abs(f(root))
-                })
-            except ValueError as e:
-                print(f"Error with x0={x0}, epsilon={eps}: {e}")
-
-    # Print results in a table format
-    print(f"\nResults for {title}:")
-    print(f"{'x0':^10} | {'epsilon':^12} | {'root':^15} | {'iterations':^10} | {'final error':^12}")
-    print("-" * 65)
-
-    for r in results:
-        print(f"{r['x0']:^10} | {r['epsilon']:^12.1e} | {r['root']:^15.10f} | {r['iterations']:^10} | {r['final_error']:^12.2e}")
-
-    return results
-
-def get_different_roots(results, epsilon=1e-4):
-    roots = [] 
-    for element in results:
-        root = element['root']
-        if len(roots) == 0:
-            roots.append(root)
-        for other in roots:
-            if abs(root - other) > epsilon:
-                roots.append(root)
-    return roots
-
-
 def main():
-    epsilon_values = [1e-6, 1e-10, 1e-14]
-    x0_values = [0.5, 1.0, 2.0]
+    # n = int(input("Podaj liczbę n (rozmiar układu równań): "))
+    n = 10
+    A = gen_A(n)
+    b = gen_b(n)
+    
+    print(f"Rozwiązywanie układu {n} równań...")
+    
+    x_lu, time_lu = solve_LU(A, b)
+    is_correct_lu = verify_solution(A, b, x_lu)
+    print(f"LU Decomposition: {time_lu:.6f} seconds, solution correct: {is_correct_lu}")
+    
+    x_inv, time_inv = solve_inverse_np(A, b)
+    is_correct_inv = verify_solution(A, b, x_inv)
+    print(f"Matrix Inversion: {time_inv:.6f} seconds, solution correct: {is_correct_inv}")
+    
+    x_qr, time_qr = solve_QR(A, b)
+    is_correct_qr = verify_solution(A, b, x_qr)
+    print(f"QR Decomposition: {time_qr:.6f} seconds, solution correct: {is_correct_qr}")
+    
+    print("\Porównanie rozwiązań:")
+    print(f"LU i inwersja dają ten sam wynik: {np.allclose(x_lu, x_inv)}")
+    print(f"LU i QR dają ten sam wynik: {np.allclose(x_lu, x_qr)}")
+    print(f"Inwersja i QR dają ten sam wynik: {np.allclose(x_inv, x_qr)}")
+    
+    print(f"Generowanie wykresu...")
 
-    plot_function(f1, [-2, 5], "Function (a): x*cos(x) - 1")
-    plot_function(f2, [-4, 4], "Function (b): x^3 - 5x - 6")
-    plot_function(f3, [-2, 2], "Function (c): e^(-x) - x^2 + 1")
-
-    print("\n=== NEWTON'S METHOD COMPARISONS ===")
-
-    print("\nEquation (a): x*cos(x) = 1")
-    results_a = compare_methods(f1, f1_der, x0_values, epsilon_values, "x*cos(x) = 1")
-
-    print("\nEquation (b): x^3 - 5x - 6 = 0")
-    results_b = compare_methods(f2, f2_der, x0_values, epsilon_values, "x^3 - 5x - 6 = 0")
-
-    print("\nEquation (c): e^(-x) = x^2 - 1")
-    results_c = compare_methods(f3, f3_der, x0_values, epsilon_values, "e^(-x) = x^2 - 1")
-
-    print("\n=== FINAL SOLUTIONS ===") 
-    solutions_a = get_different_roots(results_a)
-    print(f"Solution for x*cos(x) = 1: x ≈ {solutions_a} (found in iterations)")
-
-    solutions_b = get_different_roots(results_b)
-    print(f"Solution for x^3 - 5x - 6 = 0: x ≈ {solutions_b} (found in iterations)")
-
-    solutions_c  = get_different_roots(results_c)
-    print(f"Solution for e^(-x) = x^2 - 1: x ≈ {solutions_c} (found in iterations)")
+    sizes = [20 + 20 * i for i in range(5)]
+    plot_times(sizes)
 
 if __name__ == "__main__":
     main()
